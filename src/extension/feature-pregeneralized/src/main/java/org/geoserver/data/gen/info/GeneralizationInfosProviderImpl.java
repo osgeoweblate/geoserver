@@ -64,7 +64,7 @@ public class GeneralizationInfosProviderImpl
 
         File configurationFile =
                 ((GeoServerResourceLoader) GeoServerExtensions.bean("resourceLoader"))
-                        .get(url.getPath())
+                        .fromURL(url)
                         .file();
 
         Document doc = null;
