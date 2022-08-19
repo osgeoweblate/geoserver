@@ -9,10 +9,20 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.dom.DOMSource;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.platform.resource.Files;
+import org.geoserver.platform.resource.Paths;
+import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.Resources;
+import org.geotools.data.gen.info.GeneralizationInfos;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * The default implementation for GeneralizationInfosProvider, reading the info from an XML file.
@@ -35,10 +45,9 @@ public class GeneralizationInfosProviderImpl
 
             GeoServerResourceLoader loader =
                     GeoServerExtensions.bean(GeoServerResourceLoader.class);
-            File f =
-                    Resources.find(
-                            Resources.fromURL(Files.asResource(loader.getBaseDirectory()), path),
-                            true);
+            Resource resource = loader.get(Paths.convert(path));
+            File f = Resources.find( resource );
+            
             URL url = null;
             if (f != null && f.exists()) {
                 url = f.toURI().toURL();
@@ -49,5 +58,40 @@ public class GeneralizationInfosProviderImpl
             return url;
         }
         throw new IOException("Cannot read from " + source);
+    }
+
+    @Override
+    protected GeneralizationInfos parseXML(URL url) throws IOException {
+
+        File configurationFile = ((GeoServerResourceLoader) GeoServerExtensions.bean("resourceLoader")).get(url.getPath()).file();
+        
+
+        Document doc = null;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setIgnoringComments(true);
+        factory.setNamespaceAware(true);
+        factory.setIgnoringElementContentWhitespace(true);
+
+        try {
+            DocumentBuilder db = factory.newDocumentBuilder();
+            doc = db.parse(configurationFile);
+            VALIDATOR.validate(new DOMSource(doc));
+        } catch (Exception e) {
+            throw new IOException(e.getMessage());
+        }
+        NodeList nl = doc.getElementsByTagName(GENERALIZATION_INFOS_TAG);
+        GeneralizationInfos gInfos = new GeneralizationInfos();
+
+        Node gInfosNode = nl.item(0);
+        checkVersion(gInfosNode);
+
+        NamedNodeMap attrMap = gInfosNode.getAttributes();
+        if (attrMap.getNamedItem(DATASOURCE_NAME_ATTR) != null)
+            gInfos.setDataSourceName(attrMap.getNamedItem(DATASOURCE_NAME_ATTR).getTextContent());
+        if (attrMap.getNamedItem(DATASOURCE_NAMESPACE_NAME_ATTR) != null)
+            gInfos.setDataSourceNameSpace(
+                    attrMap.getNamedItem(DATASOURCE_NAMESPACE_NAME_ATTR).getTextContent());
+        parseGeneralizationInfoNodes(gInfosNode, gInfos);
+        return gInfos;
     }
 }
