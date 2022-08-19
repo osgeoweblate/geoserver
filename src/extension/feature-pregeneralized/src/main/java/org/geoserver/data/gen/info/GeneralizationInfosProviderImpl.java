@@ -14,7 +14,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.dom.DOMSource;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerResourceLoader;
-import org.geoserver.platform.resource.Files;
 import org.geoserver.platform.resource.Paths;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.Resources;
@@ -46,8 +45,8 @@ public class GeneralizationInfosProviderImpl
             GeoServerResourceLoader loader =
                     GeoServerExtensions.bean(GeoServerResourceLoader.class);
             Resource resource = loader.get(Paths.convert(path));
-            File f = Resources.find( resource );
-            
+            File f = Resources.find(resource);
+
             URL url = null;
             if (f != null && f.exists()) {
                 url = f.toURI().toURL();
@@ -63,8 +62,10 @@ public class GeneralizationInfosProviderImpl
     @Override
     protected GeneralizationInfos parseXML(URL url) throws IOException {
 
-        File configurationFile = ((GeoServerResourceLoader) GeoServerExtensions.bean("resourceLoader")).get(url.getPath()).file();
-        
+        File configurationFile =
+                ((GeoServerResourceLoader) GeoServerExtensions.bean("resourceLoader"))
+                        .get(url.getPath())
+                        .file();
 
         Document doc = null;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
