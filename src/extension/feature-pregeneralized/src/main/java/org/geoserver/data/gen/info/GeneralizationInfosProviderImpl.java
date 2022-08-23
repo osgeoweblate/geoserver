@@ -62,10 +62,9 @@ public class GeneralizationInfosProviderImpl
     @Override
     protected GeneralizationInfos parseXML(URL url) throws IOException {
 
-        File configurationFile =
-                ((GeoServerResourceLoader) GeoServerExtensions.bean("resourceLoader"))
-                        .fromURL(url)
-                        .file();
+        GeoServerResourceLoader loader =
+                GeoServerExtensions.bean(GeoServerResourceLoader.class);
+        Resource configurationResource = loader.fromURL(url);
 
         Document doc = null;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -75,7 +74,7 @@ public class GeneralizationInfosProviderImpl
 
         try {
             DocumentBuilder db = factory.newDocumentBuilder();
-            doc = db.parse(configurationFile);
+            doc = db.parse(configurationResource.in());
             VALIDATOR.validate(new DOMSource(doc));
         } catch (Exception e) {
             throw new IOException(e.getMessage());
