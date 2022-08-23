@@ -62,8 +62,7 @@ public class GeneralizationInfosProviderImpl
     @Override
     protected GeneralizationInfos parseXML(URL url) throws IOException {
 
-        GeoServerResourceLoader loader =
-                GeoServerExtensions.bean(GeoServerResourceLoader.class);
+        GeoServerResourceLoader loader = GeoServerExtensions.bean(GeoServerResourceLoader.class);
         Resource configurationResource = loader.fromURL(url);
 
         Document doc = null;
